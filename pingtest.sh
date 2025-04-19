@@ -102,7 +102,7 @@ if [ $utime -gt 120 ]; then
  
     # If pings fail
     if [ "${counting:-0}" -eq 0 ]; then
- 
+        ENABLELOGGING=true
         log_message "$(date +'%d/%m/%y - %H:%M:%S') All pings failed. Resetting interface $INTERFACE."
  
         # Attempt to reset interface
