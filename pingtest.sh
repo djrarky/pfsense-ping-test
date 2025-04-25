@@ -45,11 +45,22 @@ ping_hosts() {
     echo $counting
 }
 
+attempt_reset() {
+    local INTERFACE=$1
+    local RESET_OUTPUT
+
+    # Soft reload of interface
+    RESET_OUTPUT=$(/usr/local/sbin/pfSctl -c "interface reload \"$INTERFACE\"")
+    if echo "$RESET_OUTPUT" | grep -q "OK"; then
+        log_message "$(date +'%d/%m/%y - %H:%M:%S') Interface $INTERFACE reloaded successfully."
+    else
+        log_message "$(date +'%d/%m/%y - %H:%M:%S') Failed to reload interface $INTERFACE. Output: $RESET_OUTPUT"
+    fi
+}
+
 # Rotate the log if it's over 500KB
 [ -s "$LOGFILE" ] && [ "$(wc -c <"$LOGFILE")" -gt 500000 ] && > "$LOGFILE"
- 
-# Testing uptime to run script only xx seconds after boot
- 
+
 # Current time
 currtime=$(date +%s)
 
@@ -73,7 +84,7 @@ if [ $utime -gt 120 ]; then
         log_message "$(date +'%d/%m/%y - %H:%M:%S') All pings failed. Resetting interface $INTERFACE."
  
         # Attempt to reset interface
-        /usr/local/sbin/pfSctl -c "interface reload \"$INTERFACE\""
+        attempt_reset "$INTERFACE"
  
         sleep 5  # Adding a delay to ensure the interface resets
  
@@ -90,7 +101,6 @@ if [ $utime -gt 120 ]; then
         else
             log_message "$(date +'%d/%m/%y - %H:%M:%S') Interface reset successful, pings successful."
         fi
-    fi
     else
         # Network up
         log_message "$(date +'%d/%m/%y - %H:%M:%S') Network is up. Pings successful."
