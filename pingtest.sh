@@ -5,7 +5,7 @@
 # Released to public domain
 # (1) Attempts to ping external targets to test connectivity.
 # (2) If all pings fail, resets interface and retries pings.
-# (3) If pings fail again following reset, reboots pfSense.
+# (3) If pings fail again following reset, reboots the host via SSH.
 #=====================================================================
  
 #=====================================================================
@@ -21,6 +21,11 @@ INTERFACE=wan
 # Log file
 LOGFILE=/root/pingtest.log
 ENABLELOGGING=true
+
+# SSH credentials for the host
+SSH_USER="your_ssh_username"
+SSH_HOST="your_host_ip_or_hostname"
+SSH_PASSWORD="your_ssh_password"
 
 #=====================================================================
 
@@ -94,10 +99,10 @@ if [ $utime -gt 120 ]; then
         if [ "${counting:-0}" -eq 0 ]; then
             # Network down
             # Save RRD data
-            log_message "$(date +'%d/%m/%y - %H:%M:%S') All pings failed. Rebooting..."
- 
+            log_message "$(date +'%d/%m/%y - %H:%M:%S') All pings failed. Rebooting host via SSH..."
+
             /etc/rc.backup_rrd.sh
-            reboot
+            sshpass -p "$SSH_PASSWORD" ssh "$SSH_USER@$SSH_HOST" "sudo reboot"
         else
             log_message "$(date +'%d/%m/%y - %H:%M:%S') Interface reset successful, pings successful."
         fi
